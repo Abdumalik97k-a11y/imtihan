@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Медресе Онлайн Экзамен</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:,">
+</head>
+<body>
+
+    <!-- 1. АВТОРИЗАЦИЯ ФОРМАСЫ -->
+    <div id="auth-box" class="container">
+        <h2>Медресе экзаменине кирүү</h2>
+        <p class="subtitle">Маалыматтарды так киргизиңиз</p>
+        
+        <div class="input-group">
+            <label>Окуучунун аты-жөнү:</label>
+            <input type="text" id="input-name" placeholder="Мисалы: Алиев Умар">
+        </div>
+
+        <div class="input-group">
+            <label>Туулган күнүңүз:</label>
+            <input type="date" id="input-dob">
+        </div>
+
+        <div class="input-group">
+            <label>ОМС номери (14 орундуу):</label>
+            <input type="text" id="input-oms" maxlength="14" placeholder="12345678901234">
+        </div>
+
+        <button onclick="authenticateUser()">Экзаменди баштоо</button>
+    </div>
+
+    <!-- 2. ЭКЗАМЕН БӨЛҮМҮ -->
+    <div id="exam-box" class="container hidden">
+        <div class="exam-header">
+            <div>
+                <h3 id="student-display">Окуучу: </h3>
+                <p id="student-oms-display"></p>
+            </div>
+            <!-- ТАЙМЕР -->
+            <div class="timer-box">
+                Калган убакыт: <span id="timer">30:00</span>
+            </div>
+        </div>
+
+        <!-- КАМЕРА (ПРОКТОРИНГ) -->
+        <div class="camera-container">
+            <video id="webcam" autoplay playsinline muted></video>
+            <div class="cam-badge">🔴 Камера иштеп жатат</div>
+        </div>
+
+        <!-- СУРООЛОР БӨЛҮМҮ -->
+        <div id="quiz-container">
+            <!-- Суроолор JS аркылуу кошулат -->
+        </div>
+
+        <button id="submit-btn" onclick="finishExam()">Экзаменди аяктоо</button>
+    </div>
+
+    <!-- 3. ЖЫЙЫНТЫК ЖАНА СЕРТИФИКАТ БӨЛҮМҮ -->
+    <div id="result-box" class="container hidden">
+        <div class="result-card">
+            <h2 id="result-status"></h2>
+            <p id="result-score-text"></p>
+            
+            <div id="certificate-area" class="certificate hidden">
+                <div class="cert-border">
+                    <div class="cert-header">
+                        <h1>СЕРТИФИКАТ</h1>
+                        <p>Ийгиликтүү аяктагандыгы үчүн берилет</p>
+                    </div>
+                    <div class="cert-body">
+                        <h2 id="cert-name">Алиев Умар</h2>
+                        <p>Бул сертификат ээси Медресенин онлайн экзаменинен өтүп,</p>
+                        <p class="cert-score">Топтолгон балл: <b id="cert-score">0 / 0</b></p>
+                    </div>
+                    <div class="cert-footer">
+                        <div class="cert-sign">
+                            <p>_________________</p>
+                            <small>Экзамен комиссиясы</small>
+                        </div>
+                        <div class="cert-date">
+                            <p id="cert-date-text"></p>
+                            <small>Берилген күнү</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="print-btn" onclick="printCertificate()" class="btn-print hidden">🖨️ Сертификатты басып чыгаруу (Принтер)</button>
+                <button onclick="location.reload()" class="btn-restart">Башкы бетке кайтуу</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

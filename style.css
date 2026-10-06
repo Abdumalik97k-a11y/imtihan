@@ -1,0 +1,219 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 650px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+h2 {
+    color: #1a4d2e;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #333;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #1a4d2e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #143d24;
+}
+
+/* ЭКЗАМЕН БӨЛҮМҮ */
+.exam-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.timer-box {
+    background: #ffebee;
+    color: #c62828;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.camera-container {
+    position: relative;
+    width: 160px;
+    height: 120px;
+    margin: 0 auto 20px auto;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #1a4d2e;
+}
+
+#webcam {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cam-badge {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    right: 5px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 10px;
+    text-align: center;
+    padding: 2px;
+    border-radius: 4px;
+}
+
+/* СУРООЛОР */
+.question-card {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #1a4d2e;
+}
+
+.question-card h4 {
+    margin-bottom: 10px;
+    color: #222;
+}
+
+.options label {
+    display: block;
+    padding: 8px 12px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    cursor: pointer;
+}
+
+.options label:hover {
+    background: #eef5f0;
+}
+
+/* СЕРТИФИКАТ СТИЛИ */
+.certificate {
+    border: 10px solid #1a4d2e;
+    padding: 30px;
+    background: #fffdf5;
+    text-align: center;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 3px #d4af37;
+}
+
+.cert-header h1 {
+    color: #1a4d2e;
+    font-size: 32px;
+    letter-spacing: 2px;
+}
+
+.cert-body {
+    margin: 30px 0;
+}
+
+.cert-body h2 {
+    font-size: 28px;
+    color: #d4af37;
+    border-bottom: 2px solid #d4af37;
+    display: inline-block;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+
+.cert-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 40px;
+}
+
+.btn-print {
+    background-color: #0277bd;
+}
+
+.btn-print:hover {
+    background-color: #01579b;
+}
+
+.btn-restart {
+    background-color: #757575;
+}
+
+/* 🖨️ ПРИНТЕРГЕ ЧЫГАРУУ ЭРЕЖЕСИ (PRINT MEDIA) */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #certificate-area, #certificate-area * {
+        visibility: visible;
+    }
+    #certificate-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        border: 10px solid #1a4d2e !important;
+        box-shadow: none !important;
+    }
+}
