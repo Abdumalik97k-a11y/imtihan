@@ -10,7 +10,7 @@
 <body>
 
     <!-- 1. АВТОРИЗАЦИЯ ФОРМАСЫ -->
-    <div id="auth-box" class="container">
+    <div id="auth-box" class="container no-print">
         <h2>Медресе экзаменине кирүү</h2>
         <p class="subtitle">Маалыматтарды так киргизиңиз</p>
         
@@ -33,11 +33,13 @@
     </div>
 
     <!-- 2. ЭКЗАМЕН БӨЛҮМҮ -->
-    <div id="exam-box" class="container hidden">
+    <div id="exam-box" class="container hidden no-print">
         <div class="exam-header">
             <div>
                 <h3 id="student-display">Окуучу: </h3>
                 <p id="student-oms-display"></p>
+                <!-- ЭСКЕРТҮҮ ЭСЕПТЕГИЧИ -->
+                <p id="warning-count-display" style="color: #c62828; font-weight: bold; margin-top: 5px;">Эскертүүлөр: 0 / 3</p>
             </div>
             <!-- ТАЙМЕР -->
             <div class="timer-box">
@@ -45,54 +47,56 @@
             </div>
         </div>
 
-        <!-- КАМЕРА (ПРОКТОРИНГ) -->
-        <div class="camera-container">
-            <video id="webcam" autoplay playsinline muted></video>
-            <div class="cam-badge">🔴 Камера иштеп жатат</div>
+        <!-- КАМЕРА ЖАНА СТАТУС -->
+        <div class="camera-container" style="position: relative; display: inline-block;">
+            <video id="webcam" autoplay playsinline muted style="width: 200px; height: 150px; border-radius: 8px; border: 2px solid #1a4d2e; object-fit: cover;"></video>
+            <div id="ai-status" class="cam-badge" style="background: rgba(26, 77, 46, 0.9); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-top: 5px;">🟢 Прокторинг иштеп жатат</div>
         </div>
 
         <!-- СУРООЛОР БӨЛҮМҮ -->
-        <div id="quiz-container">
-            <!-- Суроолор JS аркылуу кошулат -->
-        </div>
+        <div id="quiz-container"></div>
 
         <button id="submit-btn" onclick="finishExam()">Экзаменди аяктоо</button>
     </div>
 
     <!-- 3. ЖЫЙЫНТЫК ЖАНА СЕРТИФИКАТ БӨЛҮМҮ -->
     <div id="result-box" class="container hidden">
-        <div class="result-card">
+        <div class="result-card no-print">
             <h2 id="result-status"></h2>
             <p id="result-score-text"></p>
-            
-            <div id="certificate-area" class="certificate hidden">
-                <div class="cert-border">
-                    <div class="cert-header">
-                        <h1>СЕРТИФИКАТ</h1>
-                        <p>Ийгиликтүү аяктагандыгы үчүн берилет</p>
+        </div>
+        
+        <!-- СЕРТИФИКАТ БӨЛҮМҮ -->
+        <div id="certificate-area" class="certificate hidden">
+            <div class="cert-border">
+                <div class="cert-header">
+                    <h1>СЕРТИФИКАТ</h1>
+                    <p class="cert-sub">Ийгиликтүү аяктагандыгы үчүн берилет</p>
+                </div>
+                <div class="cert-body">
+                    <p class="to-text">Бул сертификат</p>
+                    <h2 id="cert-name">Алиев Умар</h2>
+                    <p class="cert-desc">Медресенин онлайн экзаменинен өтүп, жогорку билим деңгээлин көрсөткөндүгү үчүн берилди.</p>
+                    <div class="cert-score-box">
+                        Топтолгон балл: <b id="cert-score">0 / 20</b>
                     </div>
-                    <div class="cert-body">
-                        <h2 id="cert-name">Алиев Умар</h2>
-                        <p>Бул сертификат ээси Медресенин онлайн экзаменинен өтүп,</p>
-                        <p class="cert-score">Топтолгон балл: <b id="cert-score">0 / 0</b></p>
+                </div>
+                <div class="cert-footer">
+                    <div class="cert-sign">
+                        <p>___________________</p>
+                        <small>Экзамен комиссиясы</small>
                     </div>
-                    <div class="cert-footer">
-                        <div class="cert-sign">
-                            <p>_________________</p>
-                            <small>Экзамен комиссиясы</small>
-                        </div>
-                        <div class="cert-date">
-                            <p id="cert-date-text"></p>
-                            <small>Берилген күнү</small>
-                        </div>
+                    <div class="cert-date">
+                        <p id="cert-date-text"></p>
+                        <small>Берилген күнү</small>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="action-buttons">
-                <button id="print-btn" onclick="printCertificate()" class="btn-print hidden">🖨️ Сертификатты басып чыгаруу (Принтер)</button>
-                <button onclick="location.reload()" class="btn-restart">Башкы бетке кайтуу</button>
-            </div>
+        <div class="action-buttons no-print">
+            <button id="print-btn" onclick="printCertificate()" class="btn-print hidden">🖨️ Сертификатты басып чыгаруу (Принтер)</button>
+            <button onclick="location.reload()" class="btn-restart">Башкы бетке кайтуу</button>
         </div>
     </div>
 
