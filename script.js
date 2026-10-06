@@ -35,8 +35,6 @@ let timeLeft = 30 * 60;
 let warnings = 0;
 const MAX_WARNINGS = 3;
 let isExamActive = false;
-let cameraStream = null;
-let lastLookAwayTime = 0;
 
 // АВТОРИЗАЦИЯ
 function authenticateUser() {
@@ -89,25 +87,45 @@ function startExam() {
     document.getElementById("student-oms-display").innerText = `ОМС: ${currentUser.oms}`;
 
     isExamActive = true;
+    startWebcam();
     renderQuestions();
     startTimer();
-    initProctoringAI();
-    setupTabVisibilityTracker();
+    setupProctoringEvents();
 }
 
-// 1-КОРГОО: ВКЛАДКАДАН ЧЫГЫП КЕТҮҮНҮ ТЕКШЕРҮҮ
-function setupTabVisibilityTracker() {
+// КАМЕРА
+function startWebcam() {
+    const video = document.getElementById("webcam");
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(stream => {
+            video.srcObject = stream;
+        })
+        .catch(() => {
+            alert("⚠️ Экзамен үчүн камерага уруксат берүү милдеттүү!");
+        });
+}
+
+// ЭКРАНДАН/ВКЛАДКАДАН ЧЫККАНДЫ БАЙКОО
+function setupProctoringEvents() {
+    // 1. Башка вкладкага же приложениеге өтүп кетсе
     document.addEventListener("visibilitychange", () => {
         if (isExamActive && document.hidden) {
-            triggerWarning("Экрандан же браузер вкладкасынан чыгууга болбойт!");
+            triggerWarning("Экзамен учурунда башка вкладкага же сайтка өтүүгө болбойт!");
+        }
+    });
+
+    // 2. Мышка/курсор экрандан чыгып кетсе (компьютерде)
+    window.addEventListener("blur", () => {
+        if (isExamActive) {
+            triggerWarning("Экзамен терезесинен башка жакка өтпөңүз!");
         }
     });
 }
 
-// ЭСКЕРТҮҮ БЕРҮҮ ЛОГИКАСЫ
+// ЭСКЕРТҮҮ БЕРҮҮ
 function triggerWarning(reason) {
     if (!isExamActive) return;
-    
+
     warnings++;
     document.getElementById("warning-count-display").innerText = `Эскертүүлөр: ${warnings} / ${MAX_WARNINGS}`;
     alert(`⚠️ ЭСКЕРТҮҮ (${warnings}/${MAX_WARNINGS}): ${reason}`);
@@ -115,77 +133,10 @@ function triggerWarning(reason) {
     if (warnings >= MAX_WARNINGS) {
         isExamActive = false;
         clearInterval(timerInterval);
-        alert("⛔ Сиз эрежелерди бир нече ирет бузганыңыз үчүн экзамен жокко чыгарылды!");
+        alert("⛔ Сиз 3 жолу эреже бузганыңыз үчүн экзамен жокко чыгарылды!");
         localStorage.setItem(`medrese_attempt_${currentUser.oms}`, Date.now().toString());
         location.reload();
     }
-}
-
-// 2-КОРГОО: GOOGLE MEDIAPIPE FACE MESH AI (БАШТЫ БУРГАНДЫ АНЫКТОО)
-function initProctoringAI() {
-    const videoElement = document.getElementById('webcam');
-    const canvasElement = document.getElementById('output_canvas');
-    const canvasCtx = canvasElement.getContext('2d');
-    const aiStatus = document.getElementById('ai-status');
-
-    const faceMesh = new FaceMesh({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-    });
-
-    faceMesh.setOptions({
-        maxNumFaces: 1,
-        refineLandmarks: true,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
-    });
-
-    faceMesh.onResults((results) => {
-        canvasCtx.save();
-        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-        canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-
-        if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-            const landmarks = results.multiFaceLandmarks[0];
-            
-            // Мурун жана беттин чектери аркылуу бурчтарды эсептөө
-            const nose = landmarks[1];
-            const leftCheek = landmarks[234];
-            const rightCheek = landmarks[454];
-
-            const dx = rightCheek.x - leftCheek.x;
-            const noseRelX = (nose.x - leftCheek.x) / dx;
-
-            // БАШ БУРУЛДУБЫ? (noseRelX: 0.25 - 0.75 ортосунда болушу керек)
-            if (noseRelX < 0.25 || noseRelX > 0.75) {
-                aiStatus.innerText = "⚠️ Экранды түз караңыз!";
-                aiStatus.style.background = "rgba(198, 40, 40, 0.9)";
-                
-                const now = Date.now();
-                if (now - lastLookAwayTime > 4000) { // 4 секунд туташ карабаса эскертүү берилет
-                    lastLookAwayTime = now;
-                    triggerWarning("Башты капталга бурууга болбойт!");
-                }
-            } else {
-                aiStatus.innerText = "🟢 AI: Карап турат";
-                aiStatus.style.background = "rgba(26, 77, 46, 0.8)";
-            }
-        } else {
-            aiStatus.innerText = "⚠️ Бет көрүнбөй жатат!";
-            aiStatus.style.background = "rgba(198, 40, 40, 0.9)";
-        }
-        canvasCtx.restore();
-    });
-
-    const camera = new Camera(videoElement, {
-        onFrame: async () => {
-            if (isExamActive) {
-                await faceMesh.send({ image: videoElement });
-            }
-        },
-        width: 160,
-        height: 120
-    });
-    camera.start();
 }
 
 // ТАЙМЕР
