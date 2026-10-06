@@ -1,14 +1,11 @@
 // 1. СТУДЕНТТЕРДИН ТИЗМЕСИ
 let ALLOWED_STUDENTS = [
-    { name: "Алиев Умар", dob: "12-052008", oms: "12345678901234" },
+    { name: "Алиев Умар", dob: "2008-05-12", oms: "12345678901234" },
     { name: "Касымова Фатима", dob: "2010-11-20", oms: "23456789012345" },
-    { name: "Ибрахимов Юсуф", dob: "2007-01-15", oms: "34567890123456" },
-    { name: "Каленов Абдумалик", dob: "1997-03-01", oms: "20103199701611" },
-    { name: "Абдыбасы уулу Рысбек", dob: "2012-01-02", oms: "10201201201611" },
-    { name: "Алтынбек уулу Зухайрин", dob: "01-03-1997", oms: "20103199701612" },
+    { name: "Ибрахимов Юсуф", dob: "2007-01-15", oms: "34567890123456" }
 ];
 
-// 2. БАРДЫК 20 СУРОО БАЗАСЫ
+// 2. 20 СУРОО БАЗАСЫ
 const QUESTIONS = [
     { id: 1, question: "Исламда намаз окуунун өкүмү кандай?", options: ["Фарз айн", "Суннат", "Мустахаб", "Важиб"], correct: 0 },
     { id: 2, question: "Куранда канча сүрө бар?", options: ["110", "112", "114", "116"], correct: 2 },
@@ -34,7 +31,12 @@ const QUESTIONS = [
 
 let currentUser = null;
 let timerInterval = null;
-let timeLeft = 30 * 60; // 30 мүнөт
+let timeLeft = 30 * 60; 
+let warnings = 0;
+const MAX_WARNINGS = 3;
+let isExamActive = false;
+let cameraStream = null;
+let lastLookAwayTime = 0;
 
 // АВТОРИЗАЦИЯ
 function authenticateUser() {
@@ -86,20 +88,104 @@ function startExam() {
     document.getElementById("student-display").innerText = `Окуучу: ${currentUser.name}`;
     document.getElementById("student-oms-display").innerText = `ОМС: ${currentUser.oms}`;
 
-    startWebcam();
+    isExamActive = true;
     renderQuestions();
     startTimer();
+    initProctoringAI();
+    setupTabVisibilityTracker();
 }
 
-// КАМЕРА
-function startWebcam() {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-        .then(stream => {
-            document.getElementById("webcam").srcObject = stream;
-        })
-        .catch(() => {
-            alert("Камерага уруксат берилбесе экзамен тапшыруу мүмкүн эмес!");
-        });
+// 1-КОРГОО: ВКЛАДКАДАН ЧЫГЫП КЕТҮҮНҮ ТЕКШЕРҮҮ
+function setupTabVisibilityTracker() {
+    document.addEventListener("visibilitychange", () => {
+        if (isExamActive && document.hidden) {
+            triggerWarning("Экрандан же браузер вкладкасынан чыгууга болбойт!");
+        }
+    });
+}
+
+// ЭСКЕРТҮҮ БЕРҮҮ ЛОГИКАСЫ
+function triggerWarning(reason) {
+    if (!isExamActive) return;
+    
+    warnings++;
+    document.getElementById("warning-count-display").innerText = `Эскертүүлөр: ${warnings} / ${MAX_WARNINGS}`;
+    alert(`⚠️ ЭСКЕРТҮҮ (${warnings}/${MAX_WARNINGS}): ${reason}`);
+
+    if (warnings >= MAX_WARNINGS) {
+        isExamActive = false;
+        clearInterval(timerInterval);
+        alert("⛔ Сиз эрежелерди бир нече ирет бузганыңыз үчүн экзамен жокко чыгарылды!");
+        localStorage.setItem(`medrese_attempt_${currentUser.oms}`, Date.now().toString());
+        location.reload();
+    }
+}
+
+// 2-КОРГОО: GOOGLE MEDIAPIPE FACE MESH AI (БАШТЫ БУРГАНДЫ АНЫКТОО)
+function initProctoringAI() {
+    const videoElement = document.getElementById('webcam');
+    const canvasElement = document.getElementById('output_canvas');
+    const canvasCtx = canvasElement.getContext('2d');
+    const aiStatus = document.getElementById('ai-status');
+
+    const faceMesh = new FaceMesh({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+
+    faceMesh.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: true,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+    });
+
+    faceMesh.onResults((results) => {
+        canvasCtx.save();
+        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+        if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+            const landmarks = results.multiFaceLandmarks[0];
+            
+            // Мурун жана беттин чектери аркылуу бурчтарды эсептөө
+            const nose = landmarks[1];
+            const leftCheek = landmarks[234];
+            const rightCheek = landmarks[454];
+
+            const dx = rightCheek.x - leftCheek.x;
+            const noseRelX = (nose.x - leftCheek.x) / dx;
+
+            // БАШ БУРУЛДУБЫ? (noseRelX: 0.25 - 0.75 ортосунда болушу керек)
+            if (noseRelX < 0.25 || noseRelX > 0.75) {
+                aiStatus.innerText = "⚠️ Экранды түз караңыз!";
+                aiStatus.style.background = "rgba(198, 40, 40, 0.9)";
+                
+                const now = Date.now();
+                if (now - lastLookAwayTime > 4000) { // 4 секунд туташ карабаса эскертүү берилет
+                    lastLookAwayTime = now;
+                    triggerWarning("Башты капталга бурууга болбойт!");
+                }
+            } else {
+                aiStatus.innerText = "🟢 AI: Карап турат";
+                aiStatus.style.background = "rgba(26, 77, 46, 0.8)";
+            }
+        } else {
+            aiStatus.innerText = "⚠️ Бет көрүнбөй жатат!";
+            aiStatus.style.background = "rgba(198, 40, 40, 0.9)";
+        }
+        canvasCtx.restore();
+    });
+
+    const camera = new Camera(videoElement, {
+        onFrame: async () => {
+            if (isExamActive) {
+                await faceMesh.send({ image: videoElement });
+            }
+        },
+        width: 160,
+        height: 120
+    });
+    camera.start();
 }
 
 // ТАЙМЕР
@@ -152,6 +238,7 @@ function renderQuestions() {
 
 // ЖЫЙЫНТЫК
 function finishExam() {
+    isExamActive = false;
     clearInterval(timerInterval);
     localStorage.setItem(`medrese_attempt_${currentUser.oms}`, Date.now().toString());
 
